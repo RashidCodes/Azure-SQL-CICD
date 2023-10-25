@@ -132,6 +132,24 @@ generate_and_build_package(){
     docker rmi ${PACKAGE_IMAGE_NAME}; 
     rm ${PACKAGE_DIR}/${PACKAGE_FILE}; 
 
+    # Replicate subsets
+    if [[ ! -z "$NUMBER_OF_RECORDS_TO_REPLICATE" && ${NUMBER_OF_RECORDS_TO_REPLICATE} -gt 0 ]]
+    then 
+
+        # Recreating vars to make them easy to find
+        SOURCE_CONNECTION="Server=${SOURCE_SERVER},${SOURCE_PORT};Initial Catalog=${SOURCE_DB};Encrypt=True;TrustServerCertificate=True;Connection Timeout=180;Authentication=Active Directory Device Code Flow;";
+        TARGET_CONNECTION="Server=${TARGET_SERVER},${TARGET_PORT};Initial Catalog=${TARGET_DB};Encrypt=True;TrustServerCertificate=True;Connection Timeout=180;Authentication=Active Directory Device Code Flow;";
+
+        # buid image if it does not exist
+        image_search=$(docker images | awk -F ' ' '$1 == "extract_and_load" && $2 == "v2" { print $1$2 } ');
+        if [[ -z $image_search ]]
+        then 
+            docker build -t extract_and_load:v2 -f ./dockerfiles/c-sharp/App/Dockerfile ./dockerfiles/c-sharp/App/;
+        fi;
+        docker run --name c-sharp --rm extract_and_load:v2 ${tables_for_csharp} ${NUMBER_OF_RECORDS_TO_REPLICATE} "${SOURCE_CONNECTION}" "${TARGET_CONNECTION}";
+        docker rmi extract_and_load:v2;
+    fi
+
 }
 
 
@@ -196,18 +214,6 @@ fi;
 
 # Generate and build package.sh
 generate_and_build_package
-
-# Replicate subsets
-if [[ ! -z "$NUMBER_OF_RECORDS_TO_REPLICATE" && ${NUMBER_OF_RECORDS_TO_REPLICATE} -gt 0 ]]
-then 
-
-    SOURCE_CONNECTION="Server=${SOURCE_SERVER},${SOURCE_PORT};Initial Catalog=${SOURCE_DB};Encrypt=True;TrustServerCertificate=True;Connection Timeout=180;Authentication=Active Directory Device Code Flow;";
-    TARGET_CONNECTION="Server=${TARGET_SERVER},${TARGET_PORT};Initial Catalog=${TARGET_DB};Encrypt=True;TrustServerCertificate=True;Connection Timeout=180;Authentication=Active Directory Device Code Flow;";
-
-    docker build -t extract_and_load:v2 -f ./dockerfiles/c-sharp/App/Dockerfile ./dockerfiles/c-sharp/App/;
-    docker run --name c-sharp --rm extract_and_load:v2 ${tables_for_csharp} ${NUMBER_OF_RECORDS_TO_REPLICATE} "${SOURCE_CONNECTION}" "${TARGET_CONNECTION}";
-    docker rmi extract_and_load:v2;
-fi
 
 log "info" "Make sure all objects were created in your feature/local database";
 log "info" "Inspect logs for errors";
