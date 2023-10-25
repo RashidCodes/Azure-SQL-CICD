@@ -204,7 +204,9 @@ then
     SOURCE_CONNECTION="Server=${SOURCE_SERVER},${SOURCE_PORT};Initial Catalog=${SOURCE_DB};Encrypt=True;TrustServerCertificate=True;Connection Timeout=180;Authentication=Active Directory Device Code Flow;";
     TARGET_CONNECTION="Server=${TARGET_SERVER},${TARGET_PORT};Initial Catalog=${TARGET_DB};Encrypt=True;TrustServerCertificate=True;Connection Timeout=180;Authentication=Active Directory Device Code Flow;";
 
-    dotnet run --project ./dockerfiles/c-sharp/App ${tables_for_csharp} ${NUMBER_OF_RECORDS_TO_REPLICATE} "${SOURCE_CONNECTION}" "${TARGET_CONNECTION}";
+    docker build -t extract_and_load:v2 -f ./dockerfiles/c-sharp/App/Dockerfile ./dockerfiles/c-sharp/App/;
+    docker run --name c-sharp --rm extract_and_load:v2 ${tables_for_csharp} ${NUMBER_OF_RECORDS_TO_REPLICATE} "${SOURCE_CONNECTION}" "${TARGET_CONNECTION}";
+    docker rmi extract_and_load:v2;
 fi
 
 log "info" "Make sure all objects were created in your feature/local database";
