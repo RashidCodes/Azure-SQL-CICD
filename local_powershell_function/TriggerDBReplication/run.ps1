@@ -53,16 +53,12 @@ volumes: null
 echo $yaml > my-job-template.yaml;
 
 # Trigger the job
-az containerapp job start --name "sample-job" --resource-group "RG-TEST" --yaml my-job-template.yaml
+az containerapp job start --name "sample-job" --resource-group "RG-TEST" --yaml my-job-template.yaml > out
 
 # Clean up: Remove config 
 rm my-job-template.yaml;
 
-$body = "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response."
-
-if ($source_server) {
-    $body = $yaml
-}
+$body = $(cat out);
 
 # Associate values to output bindings by calling 'Push-OutputBinding'.
 Push-OutputBinding -Name Response -Value ([HttpResponseContext]@{
