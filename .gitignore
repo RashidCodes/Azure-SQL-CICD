@@ -4,3 +4,4 @@
 *.pem
 *test.sh
 *env
+.vscode/

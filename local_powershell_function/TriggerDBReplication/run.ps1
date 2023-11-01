@@ -5,7 +5,7 @@ param($Request, $TriggerMetadata)
 
 
 # Login using MSI
-az login --identity;
+Az login --identity;
 
 # Write to the Azure Functions log stream.
 Write-Host "Commencing Data replication"
@@ -53,12 +53,12 @@ volumes: null
 echo $yaml > my-job-template.yaml;
 
 # Trigger the job
-az containerapp job start --name "sample-job" --resource-group "RG-TEST" --yaml my-job-template.yaml > out
+Az containerapp job start --name "sample-job" --resource-group "RG-TEST" --yaml my-job-template.yaml > out
 
 # Clean up: Remove config 
 rm my-job-template.yaml;
 
-$body = $(cat out);
+$body = $(echo out);
 
 # Associate values to output bindings by calling 'Push-OutputBinding'.
 Push-OutputBinding -Name Response -Value ([HttpResponseContext]@{
