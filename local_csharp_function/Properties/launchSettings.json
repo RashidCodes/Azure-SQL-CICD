@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "local_csharp_function": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7138",
+      "launchBrowser": false
+    }
+  }
+}
