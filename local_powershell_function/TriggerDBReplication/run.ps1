@@ -3,9 +3,10 @@ using namespace System.Net
 # Input bindings are passed in via param block.
 param($Request, $TriggerMetadata)
 
+Import-Module Az.ContainerInstance;
 
 # Login using MSI
-Az login --identity;
+Connect-AzAccount -Identity
 
 # Write to the Azure Functions log stream.
 Write-Host "Commencing Data replication"
@@ -53,12 +54,14 @@ volumes: null
 echo $yaml > my-job-template.yaml;
 
 # Trigger the job
-Az containerapp job start --name "sample-job" --resource-group "RG-TEST" --yaml my-job-template.yaml > out
-
+# Az containerapp job start --name "sample-job" --resource-group "RG-TEST" --yaml my-job-template.yaml > out
+$env1 = New-AzContainerInstanceEnvironmentVariableObject -Name "SOURCE_SERVER" -Value "how-will-calven-trigger-okta.database.windows.net"
+$container = New-AzContainerInstanceObject -Name test-container -Image "kingmoh/local_powershell_function:v4" -RequestCpu 0.5 -RequestMemoryInGb 1 -EnvironmentVariable @($env1);
+$containerGroup = New-AzContainerGroup -ResourceGroupName rg-test -Name test-cg -Location "Australia East" -Container $container -OsType Linux -RestartPolicy "Never" -AsJob
 # Clean up: Remove config 
-rm my-job-template.yaml;
+# rm my-job-template.yaml;
 
-$body = $(echo out);
+$body = "Check status"
 
 # Associate values to output bindings by calling 'Push-OutputBinding'.
 Push-OutputBinding -Name Response -Value ([HttpResponseContext]@{
