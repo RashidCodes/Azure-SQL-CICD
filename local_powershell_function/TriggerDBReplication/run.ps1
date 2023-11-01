@@ -6,6 +6,8 @@ param($Request, $TriggerMetadata)
 Import-Module Az.ContainerInstance;
 
 # Login using MSI
+# This function has contributor access in the rg-test resource group
+# Without this, it won't be able to spin up and tear down the container instances
 Connect-AzAccount -Identity
 
 # Write to the Azure Functions log stream.
@@ -20,51 +22,35 @@ $target_db = $Request.Body.target_db
 $target_port = $Request.Body.target_port
 $tables_to_replicate = $Request.Body.tables_to_replicate
 $number_of_records_to_replicate = $Request.Body.number_of_records_to_replicate
+$container_guid = New-Guid
+$container_group_name = "${container_guid}-cg"
 
-$yaml = @”
-containers:
-- command: []
-  image: docker.io/kingmoh/extract_and_load:v3
-  name: sample-job
-  resources:
-    cpu: 0.5
-    memory: 1Gi
-  env:
-  - name: SOURCE_SERVER
-    value: $source_server
-  - name: SOURCE_DB
-    value: $source_db
-  - name: SOURCE_PORT
-    value: $source_port
-  - name: TARGET_SERVER
-    value: $target_server
-  - name: TARGET_DB
-    value: $target_db
-  - name: TARGET_PORT
-    value: $target_port
-  - name: USER_DEFINED_TABLES_TO_REPLICATE
-    value: $tables_to_replicate
-  - name: NUMBER_OF_RECORDS_TO_REPLICATE
-    value: $number_of_records_to_replicate
-initContainers: null
-volumes: null
-“@
+# Env Vars
+$source_server_env = New-AzContainerInstanceEnvironmentVariableObject -Name "SOURCE_SERVER" -Value $source_server
+$source_db_env = New-AzContainerInstanceEnvironmentVariableObject -Name "SOURCE_DB" -Value $source_db
+$source_port_env = New-AzContainerInstanceEnvironmentVariableObject -Name "SOURCE_PORT" -Value $source_port
+$target_server_env = New-AzContainerInstanceEnvironmentVariableObject -Name "TARGET_SERVER" -Value $target_server
+$target_db_env = New-AzContainerInstanceEnvironmentVariableObject -Name "TARGET_DB" -Value $target_db
+$target_port_env = New-AzContainerInstanceEnvironmentVariableObject -Name "TARGET_PORT" -Value $target_port
+$tables_to_replicate_env = New-AzContainerInstanceEnvironmentVariableObject -Name "USER_DEFINED_TABLES_TO_REPLICATE" -Value $tables_to_replicate
+$number_of_records_to_replicate_env = New-AzContainerInstanceEnvironmentVariableObject -Name "NUMBER_OF_RECORDS_TO_REPLICATE" -Value $number_of_records_to_replicate
 
-# echo to a temp file 
-echo $yaml > my-job-template.yaml;
+# Container Details
+$container = New-AzContainerInstanceObject -Name $container_guid -Image "kingmoh/extract_and_load:v3" -RequestCpu 0.5 -RequestMemoryInGb 1 -EnvironmentVariable @($source_server_env, $source_db_env, $source_port_env, $target_server_env, $target_db_env, $target_port_env, $tables_to_replicate_env, $number_of_records_to_replicate_env);
+$containerGroup = New-AzContainerGroup -ResourceGroupName rg-test -Name $container_group_name -Location australiaeast -Container $container -OsType Linux -RestartPolicy "Never"
 
-# Trigger the job
-# Az containerapp job start --name "sample-job" --resource-group "RG-TEST" --yaml my-job-template.yaml > out
-$env1 = New-AzContainerInstanceEnvironmentVariableObject -Name "SOURCE_SERVER" -Value "how-will-calven-trigger-okta.database.windows.net"
-$container = New-AzContainerInstanceObject -Name test-container -Image "kingmoh/local_powershell_function:v4" -RequestCpu 0.5 -RequestMemoryInGb 1 -EnvironmentVariable @($env1);
-$containerGroup = New-AzContainerGroup -ResourceGroupName rg-test -Name test-cg -Location "Australia East" -Container $container -OsType Linux -RestartPolicy "Never" -AsJob
-# Clean up: Remove config 
-# rm my-job-template.yaml;
+# Send container logs
+$cg_logs = Get-AzContainerInstanceLog -ResourceGroupName rg-test -ContainerGroupName test-cg -ContainerName $container_guid
 
-$body = "Check status"
+# Invoke container group 
+Stop-AzContainerGroup -Name $container_group_name -ResourceGroupName rg-test;
+
+# Remove container
+Remove-AzContainerGroup -Name $container_group_name -ResourceGroupName rg-test;
+
 
 # Associate values to output bindings by calling 'Push-OutputBinding'.
 Push-OutputBinding -Name Response -Value ([HttpResponseContext]@{
     StatusCode = [HttpStatusCode]::OK
-    Body = $body
+    Body = $cg_logs
 })
