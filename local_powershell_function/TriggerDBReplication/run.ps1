@@ -24,6 +24,15 @@ $tables_to_replicate = $Request.Body.tables_to_replicate
 $number_of_records_to_replicate = $Request.Body.number_of_records_to_replicate
 $container_guid = New-Guid
 $container_group_name = "${container_guid}-cg"
+$resource_group_name = "rg-test"
+$location = "australiaeast"
+$subnet_name = "default"
+$vnet_name = "sample-virtual-network"
+$subnet_id = @{
+    Id = "/subscriptions/$Env:subscription/resourceGroups/$resource_group_name/providers/Microsoft.Network/virtualNetworks/$vnet_name/subnets/$subnet_name"
+    Name = 'default-subnet'
+}
+
 
 # Env Vars
 $source_server_env = New-AzContainerInstanceEnvironmentVariableObject -Name "SOURCE_SERVER" -Value $source_server
@@ -36,20 +45,20 @@ $tables_to_replicate_env = New-AzContainerInstanceEnvironmentVariableObject -Nam
 $number_of_records_to_replicate_env = New-AzContainerInstanceEnvironmentVariableObject -Name "NUMBER_OF_RECORDS_TO_REPLICATE" -Value $number_of_records_to_replicate
 
 # Container Details
-$container = New-AzContainerInstanceObject -Name $container_guid -Image "kingmoh/extract_and_load:v3" -RequestCpu 0.5 -RequestMemoryInGb 1 -EnvironmentVariable @($source_server_env, $source_db_env, $source_port_env, $target_server_env, $target_db_env, $target_port_env, $tables_to_replicate_env, $number_of_records_to_replicate_env);
-$containerGroup = New-AzContainerGroup -ResourceGroupName rg-test -Name $container_group_name -Location australiaeast -Container $container -OsType Linux -RestartPolicy "Never" -IdentityType "UserAssigned" -IdentityUserAssignedIdentity @{"/subscriptions/7bc876fd-c9fc-4674-a3cd-115f28068bbb/resourceGroups/rg-test/providers/Microsoft.ManagedIdentity/userAssignedIdentities/azure-sql-role" = @{}}
+$container = New-AzContainerInstanceObject -Name $container_guid -Image $Env:container_image -RequestCpu 0.5 -RequestMemoryInGb 1 -EnvironmentVariable @($source_server_env, $source_db_env, $source_port_env, $target_server_env, $target_db_env, $target_port_env, $tables_to_replicate_env, $number_of_records_to_replicate_env);
+$containerGroup = New-AzContainerGroup -ResourceGroupName $resource_group_name -Name $container_group_name -Location $location -Container $container -OsType Linux -RestartPolicy "Never" -IdentityType "UserAssigned" -IdentityUserAssignedIdentity @{"/subscriptions/$Env:subscription/resourceGroups/$resource_group_name/providers/Microsoft.ManagedIdentity/userAssignedIdentities/$Env:azure_role" = @{}} -SubnetId $subnet_id
 
 # Brief pause 
 Start-Sleep -Seconds 60;
 
 # Send container logs
-$cg_logs = Get-AzContainerInstanceLog -ResourceGroupName rg-test -ContainerGroupName $container_group_name -ContainerName $container_guid
+$cg_logs = Get-AzContainerInstanceLog -ResourceGroupName $resource_group_name -ContainerGroupName $container_group_name -ContainerName $container_guid
 
 # Invoke container group 
-Stop-AzContainerGroup -Name $container_group_name -ResourceGroupName rg-test;
+Stop-AzContainerGroup -Name $container_group_name -ResourceGroupName $resource_group_name;
 
 # Remove container
-Remove-AzContainerGroup -Name $container_group_name -ResourceGroupName rg-test;
+Remove-AzContainerGroup -Name $container_group_name -ResourceGroupName $resource_group_name;
 
 # Associate values to output bindings by calling 'Push-OutputBinding'.
 Push-OutputBinding -Name Response -Value ([HttpResponseContext]@{
