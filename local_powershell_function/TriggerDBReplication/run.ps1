@@ -45,7 +45,7 @@ $tables_to_replicate_env = New-AzContainerInstanceEnvironmentVariableObject -Nam
 $number_of_records_to_replicate_env = New-AzContainerInstanceEnvironmentVariableObject -Name "NUMBER_OF_RECORDS_TO_REPLICATE" -Value $number_of_records_to_replicate
 
 # Container Details
-$container = New-AzContainerInstanceObject -Name $container_guid -Image $Env:container_image -RequestCpu 2 -RequestMemoryInGb 2.5 -EnvironmentVariable @($source_server_env, $source_db_env, $source_port_env, $target_server_env, $target_db_env, $target_port_env, $tables_to_replicate_env, $number_of_records_to_replicate_env);
+$container = New-AzContainerInstanceObject -Name $container_guid -Image $Env:container_image -RequestCpu 8 -RequestMemoryInGb 32 -EnvironmentVariable @($source_server_env, $source_db_env, $source_port_env, $target_server_env, $target_db_env, $target_port_env, $tables_to_replicate_env, $number_of_records_to_replicate_env);
 $containerGroup = New-AzContainerGroup -ResourceGroupName $resource_group_name -Name $container_group_name -Location $location -Container $container -OsType Linux -RestartPolicy "Never" -IdentityType "UserAssigned" -IdentityUserAssignedIdentity @{"/subscriptions/$Env:subscription/resourceGroups/$resource_group_name/providers/Microsoft.ManagedIdentity/userAssignedIdentities/$Env:azure_role" = @{}} -SubnetId $subnet_id
 
 # Brief pause 
