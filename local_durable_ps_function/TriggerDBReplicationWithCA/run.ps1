@@ -33,7 +33,7 @@ $subnet_id = @{
     Name = 'default-subnet'
 }
 $source_server_env = @{
-    Name = "SOURCE_SERVER",
+    Name = "SOURCE_SERVER"
     Value = $source_server
 }
 $managed_environment_name = "managedEnvironment-RGTEST-8994"
