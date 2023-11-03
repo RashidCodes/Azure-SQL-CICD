@@ -1,7 +1,5 @@
 using namespace System.Net
 
-Import-Module Az
-
 # Input bindings are passed in via param block.
 param($Request, $TriggerMetadata)
 
@@ -13,7 +11,7 @@ Import-Module Az.ContainerInstance;
 Connect-AzAccount -Identity
 
 # Write to the Azure Functions log stream.
-# Write-Host "Commencing Data replication"
+Write-Host "Commencing Data replication"
 
 # Body
 $source_server = $Request.Body.source_server
