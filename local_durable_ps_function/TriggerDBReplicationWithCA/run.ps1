@@ -3,7 +3,7 @@ using namespace System.Net
 # Input bindings are passed in via param block.
 param($name)
 
-Import-Module Az.ContainerInstance;
+Import-Module Az.App;
 
 # Login using MSI
 # This function has CONTRIBUTOR access in the rg-test resource group
