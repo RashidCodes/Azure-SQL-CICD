@@ -491,3 +491,6 @@ https://learn.microsoft.com/en-us/sql/samples/adventureworks-install-configure?v
 
 ## Resource Limitations per region
 https://dev.to/omiossec/using-azure-container-instance-with-multiple-containers-43fd
+
+## New-AzContainerApp
+https://learn.microsoft.com/en-us/powershell/module/az.app/new-azcontainerapp?view=azps-10.4.1
