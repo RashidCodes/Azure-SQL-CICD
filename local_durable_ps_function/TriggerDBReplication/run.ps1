@@ -55,6 +55,6 @@ $cg_logs = Get-AzContainerInstanceLog -ResourceGroupName $resource_group_name -C
 Stop-AzContainerGroup -Name $container_group_name -ResourceGroupName $resource_group_name;
 
 # Remove container
-Remove-AzContainerGroup -Name $container_group_name -ResourceGroupName $resource_group_name;
+# Remove-AzContainerGroup -Name $container_group_name -ResourceGroupName $resource_group_name;
 
 $cg_logs
