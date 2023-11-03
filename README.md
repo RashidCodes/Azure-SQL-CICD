@@ -438,6 +438,12 @@ Figure 25: *Deployment to Prod DB by merging UAT branch to PROD branch*
 
 Figure 26: *Direct deployment to Test DB from Feature DB*
 
+## Cross DB replication
+
+<img src="Assets/cross-db replication.png" />
+
+Figure 27: *Passwordless Cross DB Replication*
+
 <br/>
 <br/>
 

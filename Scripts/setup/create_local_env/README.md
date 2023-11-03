@@ -1,4 +1,4 @@
-# Set up your local development environment
+# Set up your local development environment (Deprecated)
 
 # Introduction
 Set up your local environment for database development with Azure SQL or SQL Server. The program replicates the **metadata** and **data** of a source database in a destination database.
