@@ -488,3 +488,6 @@ https://learn.microsoft.com/en-us/sql/tools/sqlpackage/sqlpackage-download?view=
 
 ## Restore an AdventureWorks Sample DB
 https://learn.microsoft.com/en-us/sql/samples/adventureworks-install-configure?view=sql-server-ver15&tabs=ssms#deploy-to-azure-sql-database
+
+## Resource Limitations per region
+https://dev.to/omiossec/using-azure-container-instance-with-multiple-containers-43fd
