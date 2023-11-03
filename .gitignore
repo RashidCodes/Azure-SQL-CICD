@@ -4,5 +4,8 @@
 *.pem
 *test.sh
 *env
+<<<<<<< HEAD
+=======
 .vscode/
 helper_commands.sh
+>>>>>>> bd39134c7f318ba1365826ea0177bbab53ecca5e
