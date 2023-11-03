@@ -1,7 +1,7 @@
 #!/bin/bash 
 
 # Build and push image
-version="v5"
+version="v2"
 docker rmi kingmoh/local_powershell_function:$version;
 docker build --tag kingmoh/local_powershell_function:$version .
 docker push kingmoh/local_powershell_function:$version
