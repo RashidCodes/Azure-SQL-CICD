@@ -41,7 +41,7 @@ $container_app_name = "azps-containerapp"
 
 # Container App Template Object
 $container_app_template = New-AzContainerAppTemplateObject -Name $container_guid -Image $Env:container_image -ResourceCpu 2.0 -ResourceMemory 4.0Gi -Env @($source_server_env)
-$container_app_managed_env_id = (Get-AzContainerAppManagedEnv -ResourceGroupName $resource_group_name -EnvName $managed_environment_name -SubscriptionId).Id
+$container_app_managed_env_id = (Get-AzContainerAppManagedEnv -ResourceGroupName $resource_group_name -EnvName $managed_environment_name).Id
 $container_apps_logs = New-AzContainerApp -Name $container_app_name -ResourceGroupName $resource_group_name -Location $location -ManagedEnvironmentId $container_app_managed_env_id -TemplateContainer $container_app_template
 
 # Check Status
