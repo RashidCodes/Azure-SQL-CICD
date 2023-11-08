@@ -7,3 +7,4 @@
 .vscode/
 helper_commands.sh
 *parameters.json
+*test.ps1
