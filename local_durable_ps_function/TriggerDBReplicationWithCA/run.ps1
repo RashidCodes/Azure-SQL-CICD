@@ -33,6 +33,7 @@ $location = $Env:location
 $parameterFileName = $Env:parameterFileName
 $templateFileName = $Env:templateFileName 
 $azureSqlRoleClientId = $Env:azureSqlRoleClientId
+$logWorkSpaceName = $Env:logWorkspaceName
 
 # Global Vars
 $guid = New-Guid
@@ -219,4 +220,35 @@ else {
     Remove-Item ./$templateFileName;
     Remove-Item ./$parameterFileName;
     return "An error occurred while creating ${containerAppName}"
+}
+
+
+# Remove a container app after the container completes execution
+$appRevisions = Get-AzContainerAppRevision -ContainerAppName ${containerAppName} -ResourceGroupName $resourceGroup;
+$revisions = ($appRevisions | Where-Object active -eq false).name
+$activeRevision = $revisions.split(" ")[0]
+Write-Host "Active revision: $activeRevision"
+
+# check the logs in the operational insights workspace
+$query = @"
+ContainerAppConsoleLogs_CL
+| where RevisionName_s == "${activeRevision}"
+| where Log_s has ("Inspect logs for errors")
+"@
+$workSpaceCustomerId = (Get-AzOperationalInsightsWorkspace -Name $logWorkSpaceName -ResourceGroupName $resourceGroup).CustomerId
+
+
+# May the polling begin
+while ([string]::IsNullOrEmpty((Invoke-AzOperationalInsightsQuery -WorkspaceId $workSpaceCustomerId -Query $query).Results.Log_s)){
+    Write-Host "Polling in the next $pollingTime seconds";
+    Start-Sleep -Seconds $pollingTime;
+} 
+
+if ((Invoke-AzOperationalInsightsQuery -WorkspaceId $workSpaceCustomerId -Query $query).Results.Log_s)
+{
+    $results = Invoke-AzOperationalInsightsQuery -WorkspaceId $workSpaceCustomerId -Query $query
+    $logs = $results.Results.Log_s;
+    Write-Host "Logs: ${logs}";
+    Write-Host "Container execution completed. Removing container app"
+    Remove-AzContainerApp -Name ${containerAppName} -ResourceGroupName $resourceGroup
 }
