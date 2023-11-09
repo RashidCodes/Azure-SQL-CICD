@@ -7,7 +7,7 @@ Import-Module Az.App;
 
 # Login using MSI
 # This function has CONTRIBUTOR access in the rg-test resource group
-# Without this, it won't be able to spin up and tear down the container instances
+# Without this, it won't be able to spin up and tear down the container apps
 Connect-AzAccount -Identity
 
 # Write to the Azure Functions log stream.
@@ -22,32 +22,201 @@ $target_db = $name.target_db
 $target_port = $name.target_port
 $tables_to_replicate = $name.tables_to_replicate
 $number_of_records_to_replicate = $name.number_of_records_to_replicate
-$container_guid = New-Guid
-$container_group_name = "${container_guid}-cg"
-$resource_group_name = "rg-test"
-$location = "australiaeast"
-$subnet_name = "default"
-$vnet_name = "sample-virtual-network"
-$subnet_id = @{
-    Id = "/subscriptions/$Env:subscription/resourceGroups/$resource_group_name/providers/Microsoft.Network/virtualNetworks/$vnet_name/subnets/$subnet_name"
-    Name = 'default-subnet'
-}
-$source_server_env = @{
-    Name = "SOURCE_SERVER"
-    Value = $source_server
-}
-$managed_environment_name = "managedEnvironment-RGTEST-8994"
-$container_app_name = "azps-containerapp"
 
-# Container App Template Object
-$container_app_template = New-AzContainerAppTemplateObject -Name $container_guid -Image $Env:container_image -ResourceCpu 2.0 -ResourceMemory 4.0Gi -Env @($source_server_env)
-$container_app_managed_env_id = (Get-AzContainerAppManagedEnv -ResourceGroupName $resource_group_name -EnvName $managed_environment_name).Id
-$container_apps_logs = New-AzContainerApp -Name $container_app_name -ResourceGroupName $resource_group_name -Location $location -ManagedEnvironmentId $container_app_managed_env_id -TemplateContainer $container_app_template
+# Environment Vars
+$subscriptionId = $Env:subscriptionId
+$resourceGroup = $Env:resourceGroup
+$managedEnvName = $Env:managedEnvName
+$userAssignedIdentity = $Env:userAssignedIdentity
+$containerImageName = $Env:containerImageName
+$location = $Env:location
+$parameterFileName = $Env:parameterFileName
+$templateFileName = $Env:templateFileName 
+$azureSqlRoleClientId = $Env:azureSqlRoleClientId
 
-# Check Status
+# Global Vars
+$guid = New-Guid
+$randomStr = $guid.ToString().substring(0, 23);
+$containerAppName = "fg-${randomStr}-ca"
+$containerName = "extract-and-load"
+$apiVersion = "2023-05-02-preview" # Use GA Api Version
+$identityResourceId = "/subscriptions/$subscriptionId/resourceGroups/$resourceGroup/providers/Microsoft.ManagedIdentity/userAssignedIdentities/$identity"
+$managedEnvironmentId = "/subscriptions/$subscriptionId/resourceGroups/$resourceGroup/providers/Microsoft.App/managedEnvironments/$managedEnvName"
+
+# Templates
+$parametersRawJSON = @"
+{
+    "`$schema`": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "subscriptionId": {
+            "value": "$subscriptionId"
+        },
+        "name": {
+            "value": "$containerAppName"
+        },
+        "location": {
+            "value": "$location"
+        },
+        "environmentId": {
+            "value": "$managedEnvironmentId"
+        },
+        "containers": {
+            "value": [
+                {
+                    "name": "$containerName",
+                    "image": "$containerImageName",
+                    "command": [],
+                    "resources": {
+                        "cpu": "2.5",
+                        "memory": "5Gi"
+                    },
+                    "env": [
+                        {
+                            "name": "SOURCE_SERVER",
+                            "value": "${source_server}"
+                        },
+                        {
+                            "name": "SOURCE_DB",
+                            "value": "${source_db}"
+                        },
+                        {
+                            "name": "SOURCE_PORT",
+                            "value": "${source_port}"
+                        },
+                        {
+                            "name": "TARGET_SERVER",
+                            "value": "${target_server}"
+                        },
+                        {
+                            "name": "TARGET_DB",
+                            "value": "${target_db}"
+                        },
+                        {
+                            "name": "TARGET_PORT",
+                            "value": "${target_port}"
+                        },
+                        {
+                            "name": "USER_DEFINED_TABLES_TO_REPLICATE",
+                            "value": "${tables_to_replicate}"
+                        },
+                        {
+                            "name": "NUMBER_OF_RECORDS_TO_REPLICATE",
+                            "value": "${number_of_records_to_replicate}"
+                        },
+                        {
+                            "name": "CLIENT_ID",
+                            "value": "${azureSqlRoleClientId}"
+                        }
+                    ]
+                }
+            ]
+        },
+        "registries": {
+            "value": []
+        },
+        "secrets": {
+            "value": {
+                "arrayValue": []
+            }
+        }
+    }
+}
+"@
+
+
+$templateRawJSON = @"
+{
+    "`$schema`": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "subscriptionId": {
+            "type": "string"
+        },
+        "name": {
+            "type": "string"
+        },
+        "location": {
+            "type": "string"
+        },
+        "environmentId": {
+            "type": "string"
+        },
+        "containers": {
+            "type": "array"
+        },
+        "secrets": {
+            "type": "secureObject",
+            "defaultValue": {
+                "arrayValue": []
+            }
+        },
+        "registries": {
+            "type": "array"
+        }
+    },
+    "resources": [
+        {
+            "apiVersion": "$apiVersion",
+            "name": "[parameters('name')]",
+            "type": "Microsoft.App/containerapps",
+            "kind": "containerapps",
+            "location": "[parameters('location')]",
+            "identity": {
+                "type": "UserAssigned",
+                "userAssignedIdentities": {
+                    "$identityResourceId": {}
+                }
+            },
+            "dependsOn": [],
+            "properties": {
+                "environmentId": "[parameters('environmentId')]",
+                "configuration": {
+                    "secrets": "[parameters('secrets').arrayValue]",
+                    "registries": "[parameters('registries')]",
+                    "activeRevisionsMode": "Single"
+                },
+                "template": {
+                    "containers": "[parameters('containers')]",
+                    "scale": {
+                        "minReplicas": 1,
+                        "maxReplicas": 1
+                    }
+                },
+                "workloadProfileName": "Consumption"
+            }
+        }
+    ]
+}
+"@
+
+
+# Parameters
+$parametersJSON = $parametersRawJSON;
+Write-Output $parametersJSON > $parameterFileName;
+
+# Template 
+$templateJSON = $templateRawJSON;
+Write-Output $templateJSON > $templateFileName
+
+
+$resourceDeploymentStatus = New-AzResourceGroupDeployment `
+    -Name sample-container-app-arm `
+    -ResourceGroupName rg-test `
+    -TemplateFile $templateFileName `
+    -TemplateParameterFile $parameterFileName
+
+
+# Check Status and clean up
 if ($?) {
-    return $container_apps_logs
+    # Clean up 
+    Remove-Item ./$templateFileName;
+    Remove-Item ./$parameterFileName;
+    return "Successfully created containerapp: $containerAppName"
 } 
 else {
-    "An error occurred while creating ${container_app_name}: $container_apps_logs"
+    # Clean up 
+    Remove-Item ./$templateFileName;
+    Remove-Item ./$parameterFileName;
+    return "An error occurred while creating ${containerAppName}"
 }
