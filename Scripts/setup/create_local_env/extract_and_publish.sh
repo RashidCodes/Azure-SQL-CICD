@@ -83,8 +83,8 @@ generate_and_build_package(){
 
 
     # Azure Active Directory Device Code Flow Authentication: The most delicate authentication method of them all
-    target_db_conn_azure_str="Server=${TARGET_SERVER},${TARGET_PORT};Database=${TARGET_DB};Encrypt=True;Authentication=Active Directory Managed Identity;TrustServerCertificate=True;Connection Timeout=360;"
-    source_db_conn_azure_str="Server=${SOURCE_SERVER},${SOURCE_PORT};Database=${SOURCE_DB};Encrypt=True;Authentication=Active Directory Managed Identity;TrustServerCertificate=True;Connection Timeout=360;"
+    target_db_conn_azure_str="Server=${TARGET_SERVER},${TARGET_PORT};Database=${TARGET_DB};Encrypt=True;Authentication=Active Directory MSI;TrustServerCertificate=True;Connection Timeout=360;User Id=${CLIENT_ID};"
+    source_db_conn_azure_str="Server=${SOURCE_SERVER},${SOURCE_PORT};Database=${SOURCE_DB};Encrypt=True;Authentication=Active Directory MSI;TrustServerCertificate=True;Connection Timeout=360;User Id=${CLIENT_ID};"
     extract_command_for_azure_auth="sqlpackage /Action:Extract /TargetFile:${DACPAC_LOCATION} ${tables} /SourceConnectionString:\"${source_db_conn_azure_str}\" /DiagnosticsFile:${DACPAC_LOGS_LOCATION} /p:VerifyExtraction=true;"
     extract_command_metadata_only="sqlpackage /Action:Extract /TargetFile:${DACPAC_LOCATION} /DiagnosticsFile:${DACPAC_LOGS_LOCATION} /SourceConnectionString:\"${source_db_conn_azure_str}\";"
     publish_command_for_azure_auth="sqlpackage /Action:Publish /SourceFile:${DACPAC_LOCATION} /TargetConnectionString:\"${target_db_conn_azure_str}\" /p:BlockOnPossibleDataLoss=False /p:DropConstraintsNotInSource='False'"

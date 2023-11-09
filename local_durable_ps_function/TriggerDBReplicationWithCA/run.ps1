@@ -32,6 +32,7 @@ $containerImageName = $Env:containerImageName
 $location = $Env:location
 $parameterFileName = $Env:parameterFileName
 $templateFileName = $Env:templateFileName 
+$azureSqlRoleClientId = $Env:azureSqlRoleClientId
 
 # Global Vars
 $guid = New-Guid
@@ -102,6 +103,10 @@ $parametersRawJSON = @"
                         {
                             "name": "NUMBER_OF_RECORDS_TO_REPLICATE",
                             "value": "${number_of_records_to_replicate}"
+                        },
+                        {
+                            "name": "CLIENT_ID",
+                            "value": "${azureSqlRoleClientId}"
                         }
                     ]
                 }
