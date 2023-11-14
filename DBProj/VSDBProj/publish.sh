@@ -1,3 +1,3 @@
 #!/bin/bash 
 
-sqlpackage /version;
+echo $(sqlpackage /version);
