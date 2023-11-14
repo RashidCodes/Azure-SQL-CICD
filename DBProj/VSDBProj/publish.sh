@@ -1,7 +1,7 @@
 #!/bin/bash 
 
 echo "Publishing dacpac"
-DACPAC_LOCATION="./DBProj/VSDBProj/bin/Release/VSDBProj.dacpac"
+DACPAC_LOCATION="/azp/_work/r1/a/_azuresqlcicd/DBProj/VSDBProj/bin/Release/VSDBProj.dacpac"
 
 # For local dev
 # ADJUSTED_DACPAC_LOCATION="./bin/Release/VSDBProj.dacpac"
