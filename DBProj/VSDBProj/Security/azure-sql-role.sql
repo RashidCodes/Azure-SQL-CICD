@@ -1,0 +1,2 @@
+﻿CREATE USER [azure-sql-role] FOR EXTERNAL PROVIDER;
+
