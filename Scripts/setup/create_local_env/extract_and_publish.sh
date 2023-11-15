@@ -74,14 +74,7 @@ generate_and_build_package(){
 
     # Create tables var
     generate_tables
-
-    # target_db_conn_azure_str="Server=${TARGET_SERVER},${TARGET_PORT};Initial Catalog=${TARGET_DB};Persist Security Info=False;User ID=${TARGET_USERNAME};Password=${TARGET_PASSWORD};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=True;Connection Timeout=30;";
-    # source_db_conn_azure_str="Server=${SOURCE_SERVER},${SOURCE_PORT};Initial Catalog=${SOURCE_DB};Persist Security Info=False;User ID=${SOURCE_USERNAME};Password=${SOURCE_PASSWORD};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=True;Connection Timeout=30;";
-    # extract_command="sqlpackage /Action:Extract /TargetFile:${DACPAC_LOCATION} /DiagnosticsFile:${DACPAC_LOGS_LOCATION} /p:VerifyExtraction=true ${tables} /SourceServerName:${SOURCE_SERVER},${SOURCE_PORT} /SourceDatabaseName:${SOURCE_DB} /SourceUser:${SOURCE_USERNAME} /SourcePassword:\"${SOURCE_PASSWORD}\" /SourceTrustServerCertificate:True";
-    # python_extract_command="sqlpackage /Action:Extract /TargetFile:${DACPAC_LOCATION} /DiagnosticsFile:${DACPAC_LOGS_LOCATION} /p:VerifyExtraction=true /SourceServerName:${SOURCE_SERVER},${SOURCE_PORT} /SourceDatabaseName:${SOURCE_DB} /SourceUser:${SOURCE_USERNAME} /SourcePassword:\"${SOURCE_PASSWORD}\" /SourceTrustServerCertificate:True";
-    # publish_command="sqlpackage /Action:Publish /SourceFile:${DACPAC_LOCATION} /TargetConnectionString:\"${target_db_conn_str}\" /p:BlockOnPossibleDataLoss=False;"
-
-
+    
     # Azure Active Directory Device Code Flow Authentication: The most delicate authentication method of them all
     target_db_conn_azure_str="Server=${TARGET_SERVER},${TARGET_PORT};Database=${TARGET_DB};Encrypt=True;Authentication=Active Directory MSI;TrustServerCertificate=True;Connection Timeout=360;User Id=${CLIENT_ID};"
     source_db_conn_azure_str="Server=${SOURCE_SERVER},${SOURCE_PORT};Database=${SOURCE_DB};Encrypt=True;Authentication=Active Directory MSI;TrustServerCertificate=True;Connection Timeout=360;User Id=${CLIENT_ID};"
