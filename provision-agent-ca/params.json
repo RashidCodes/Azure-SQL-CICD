@@ -1,0 +1,57 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "subscriptionId": {
+            "value": "<YOUR SUBSCRIPTION>"
+        },
+        "name": {
+            "value": "azp-agent-linux"
+        },
+        "location": {
+            "value": "australiaeast"
+        },
+        "environmentId": {
+            "value": "/subscriptions/<YOUR SUBSCRIPTION>/resourceGroups/rg-test/providers/Microsoft.App/managedEnvironments/test-managed-env"
+        },
+        "containers": {
+            "value": [
+                {
+                    "name": "azp-agent-linux",
+                    "image": "docker.io/kingmoh/azp-agent:linux",
+                    "command": [],
+                    "resources": {
+                        "cpu": "2",
+                        "memory": "4Gi"
+                    },
+                    "env": [
+                        {
+                            "name": "AZP_URL",
+                            "value": "https://dev.azure.com/rashidcodes"
+                        },
+                        {
+                            "name": "AZP_TOKEN",
+                            "value": "<YOUR TOKEN>"
+                        },
+                        {
+                            "name": "AZP_POOL",
+                            "value": "MyAgentContainerPool"
+                        },
+                        {
+                            "name": "AZP_AGENT_NAME",
+                            "value": "DockerAgentCA"
+                        }
+                    ]
+                }
+            ]
+        },
+        "registries": {
+            "value": []
+        },
+        "secrets": {
+            "value": {
+                "arrayValue": []
+            }
+        }
+    }
+}

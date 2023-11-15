@@ -494,3 +494,6 @@ https://dev.to/omiossec/using-azure-container-instance-with-multiple-containers-
 
 ## New-AzContainerApp
 https://learn.microsoft.com/en-us/powershell/module/az.app/new-azcontainerapp?view=azps-10.4.1
+
+## MsBuild with the dotnet-cli
+https://github.com/microsoft/DacFx/blob/main/src/Microsoft.Build.Sql/docs/Tutorial.md

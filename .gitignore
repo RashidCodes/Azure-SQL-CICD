@@ -9,5 +9,6 @@ helper_commands.sh
 *parameters.json
 *test.ps1
 *.vs*
-*bin*
 *obj*
+*.dll
+*.pdb
